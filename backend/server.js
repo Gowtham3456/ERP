@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import pool from "./Utils/db.js";
 import enquiryRoutes from "./Routes/enquiry.routes.js";
+import quotationRoutes from "./Routes/quotation.route.js";
 
 const app = express();
 
@@ -9,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/enquiries", enquiryRoutes);
+app.use("/api/quotations", quotationRoutes)
 
 // Test DB connection
 app.get("/db-test", async (req, res) => {
