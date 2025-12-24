@@ -1,0 +1,167 @@
+Create a SUPER ADMIN User
+
+INSERT INTO users (full_name, email, password, role)
+VALUES (
+  'Super Admin',
+  'admin@erp.com',
+  'hashed_password_here',
+  'SUPER_ADMIN'
+);
+
+Create a Customer
+INSERT INTO customers (
+  customer_name,
+  phone,
+  email,
+  company_name,
+  gst_number,
+  billing_address,
+  shipping_address
+)
+VALUES (
+  'Ravi Kumar',
+  '9876543210',
+  'ravi@gmail.com',
+  'RK Aluminium Works',
+  '33ABCDE1234F1Z5',
+  'Chennai, Tamil Nadu',
+  'Madurai, Tamil Nadu'
+);
+
+Base URL:
+
+http://localhost:5000/api/enquiries
+
+
+Create Enquiry
+
+POST /api/enquiries
+
+input:
+{
+  "customer_id": 1,
+  "created_by": 1
+}
+
+expected output:
+{
+  "message": "Enquiry created successfully",
+  "enquiry": {
+    "enquiry_id": 1,
+    "customer_id": 1,
+    "enquiry_status": "PENDING",
+    "created_by": 1,
+    "created_at": "2025-12-23T11:15:00.000Z"
+  }
+}
+
+
+Add Enquiry Item – QTY Based
+
+POST /api/enquiries/item
+
+{
+  "enquiry_id": 1,
+  "item_name": "Aluminium Sheet",
+  "width": 1200,
+  "thickness": 2,
+  "length": 2500,
+  "density": 2.7,
+  "pricing_source": "SALES",
+  "uom": "QTY",
+  "qty": 10,
+  "weight": null,
+  "unit_price": 1500
+}
+
+Expected
+
+total_price = 10 × 1500 = 15000
+
+Add Enquiry Item – WEIGHTS Based
+
+POST /api/enquiries/item
+
+{
+  "enquiry_id": 1,
+  "item_name": "Steel Plate",
+  "width": 1000,
+  "thickness": 5,
+  "length": 2000,
+  "density": 7.85,
+  "pricing_source": "PURCHASE",
+  "uom": "WEIGHTS",
+  "qty": null,
+  "weight": 125.5,
+  "unit_price": 72
+}
+
+Expected
+
+total_price = 125.5 × 72 = 9036
+
+
+Get All Enquiries (List View)
+
+GET /api/enquiries
+
+Expected Response
+[
+  {
+    "enquiry_id": 1,
+    "enquiry_status": "PENDING",
+    "created_at": "2025-12-23T11:15:00.000Z",
+    "customer_name": "Ravi Kumar",
+    "created_by": "Super Admin"
+  }
+]
+
+Get Enquiry by ID (Master + Items) 
+
+GET /api/enquiries/1
+
+{
+  "enquiry": {
+    "enquiry_id": 1,
+    "customer_id": 1,
+    "enquiry_status": "PENDING",
+    "created_by": 1,
+    "created_at": "2025-12-23T11:15:00.000Z"
+  },
+  "items": [
+    {
+      "item_name": "Aluminium Sheet",
+      "uom": "QTY",
+      "qty": 10,
+      "unit_price": 1500,
+      "total_price": 15000
+    },
+    {
+      "item_name": "Steel Plate",
+      "uom": "WEIGHTS",
+      "weight": 125.5,
+      "unit_price": 72,
+      "total_price": 9036
+    }
+  ]
+}
+
+PUT /api/enquiries/1/status
+
+{
+  "enquiry_status": "IN_PROGRESS"
+}
+
+Delete Enquiry (Cascade Delete)
+
+DELETE /api/enquiries/1
+
+Expected
+{
+  "message": "Enquiry deleted successfully"
+}
+
+
+All enquiry_items are automatically deleted (CASCADE)
+
+
