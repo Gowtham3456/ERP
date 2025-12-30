@@ -1,20 +1,41 @@
 import express from "express";
 import {
   createEnquiry,
-  addEnquiryItem,
   getAllEnquiries,
   getEnquiryById,
   updateEnquiryStatus,
-  deleteEnquiry,
+  deleteEnquiry
 } from "../Controllers/enquiry.controller.js";
+
+import {
+  authenticateJWT,
+  authorizeRoles
+} from "../Utils/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/", createEnquiry);
-router.post("/item", addEnquiryItem);
-router.get("/", getAllEnquiries);
-router.get("/:id", getEnquiryById);
-router.put("/:id/status", updateEnquiryStatus);
-router.delete("/:id", deleteEnquiry);
+router.post(
+  "/",
+  authenticateJWT,
+  authorizeRoles("ADMIN", "STAFF"),
+  createEnquiry
+);
+
+router.get("/", authenticateJWT, getAllEnquiries);
+router.get("/:id", authenticateJWT, getEnquiryById);
+
+router.put(
+  "/:id/status",
+  authenticateJWT,
+  authorizeRoles("ADMIN"),
+  updateEnquiryStatus
+);
+
+router.delete(
+  "/:id",
+  authenticateJWT,
+  authorizeRoles("ADMIN"),
+  deleteEnquiry
+);
 
 export default router;

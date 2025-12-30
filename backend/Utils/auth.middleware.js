@@ -14,7 +14,13 @@ export const authenticateJWT = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { user_id, role }
+    /*
+      decoded = {
+        user_id,
+        roles: ['ADMIN', 'STAFF']
+      }
+    */
+    req.user = decoded;
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
@@ -22,15 +28,23 @@ export const authenticateJWT = (req, res, next) => {
 };
 
 /**
- * Role Authorization
+ * Role Authorization Middleware
+ * Usage: authorizeRoles("ADMIN", "SUPER_ADMIN")
  */
-export const authorizeRoles = (...roles) => {
+export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    const userRoles = req.user.roles || [];
+
+    const hasPermission = userRoles.some(role =>
+      allowedRoles.includes(role)
+    );
+
+    if (!hasPermission) {
       return res.status(403).json({
         message: "Access denied: insufficient permissions",
       });
     }
+
     next();
   };
 };
