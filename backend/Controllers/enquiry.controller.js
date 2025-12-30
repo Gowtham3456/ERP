@@ -7,7 +7,8 @@ import { v4 as uuidv4 } from "uuid";
  */
 export const createEnquiry = async (req, res) => {
   const {
-    customer_id,
+    supplier_id,   // 🔴 company
+    customer_id,   // 🔵 buyer
     product_id,
     quantity,
     expected_date,
@@ -18,16 +19,27 @@ export const createEnquiry = async (req, res) => {
   const userId = req.user.user_id;
 
   try {
-    // Validate customer (company)
+    // 1️⃣ Validate supplier (company)
+    const supplierRes = await pool.query(
+      `SELECT id FROM erp.suppliers WHERE id = $1`,
+      [supplier_id]
+    );
+
+    if (!supplierRes.rows.length) {
+      return res.status(400).json({ message: "Invalid supplier/company" });
+    }
+
+    // 2️⃣ Validate customer
     const customerRes = await pool.query(
       `SELECT id FROM public.customers WHERE id = $1`,
       [customer_id]
     );
 
     if (!customerRes.rows.length) {
-      return res.status(400).json({ message: "Invalid customer/company" });
+      return res.status(400).json({ message: "Invalid customer" });
     }
 
+    // 3️⃣ Create enquiry
     const result = await pool.query(
       `
       INSERT INTO public.inquiry (
@@ -51,17 +63,17 @@ export const createEnquiry = async (req, res) => {
         $1,
         $2,
         CURRENT_DATE,
-        $3,
-        $3,
-        $4,
+        $3,      -- company_id = supplier_id
+        $4,      -- customer_id
         $5,
         $6,
         $7,
-        'NEW',
         $8,
+        'NEW',
         $9,
+        $10,
         NOW(),
-        $9,
+        $10,
         NOW()
       )
       RETURNING *
@@ -69,7 +81,8 @@ export const createEnquiry = async (req, res) => {
       [
         uuidv4(),
         `INQ-${new Date().getFullYear()}-${Date.now()}`,
-        customer_id,   // company_id = customer_id
+        supplier_id,
+        customer_id,
         product_id,
         quantity,
         expected_date || null,
@@ -104,10 +117,14 @@ export const getAllEnquiries = async (req, res) => {
         e.quantity,
         e.expected_date,
         e.source,
+
+        s.name AS supplier_name,
         c.name AS customer_name,
         p.name AS product_name,
         u.name AS created_by
+
       FROM public.inquiry e
+      JOIN erp.suppliers s ON e.company_id = s.id
       JOIN public.customers c ON e.customer_id = c.id
       JOIN erp.products p ON e.product_id = p.id
       JOIN auth.users u ON e.created_by = u.id
@@ -121,6 +138,7 @@ export const getAllEnquiries = async (req, res) => {
   }
 };
 
+
 /**
  * Get Enquiry By ID
  */
@@ -132,9 +150,11 @@ export const getEnquiryById = async (req, res) => {
       `
       SELECT
         e.*,
+        s.name AS supplier_name,
         c.name AS customer_name,
         p.name AS product_name
       FROM public.inquiry e
+      JOIN erp.suppliers s ON e.company_id = s.id
       JOIN public.customers c ON e.customer_id = c.id
       JOIN erp.products p ON e.product_id = p.id
       WHERE e.id = $1
@@ -151,6 +171,7 @@ export const getEnquiryById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 /**
  * Update Enquiry Status
