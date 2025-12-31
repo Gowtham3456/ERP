@@ -68,7 +68,7 @@ export const createEnquiry = async (req, res) => {
         $4,
         $5,
         $6,
-        'NEW',
+        'PENDING',
         $7,
         $8,
         NOW(),
