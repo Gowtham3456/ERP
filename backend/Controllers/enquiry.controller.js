@@ -304,3 +304,132 @@ export const deleteEnquiry = async (req, res) => {
     client.release();
   }
 };
+
+/**
+ * =====================================================
+ * UPDATE ENQUIRY (HEADER FIELDS)
+ * =====================================================
+ */
+export const updateEnquiry = async (req, res) => {
+  const { id } = req.params;
+  const {
+    supplier_id,
+    customer_id,
+    expected_date,
+    source,
+    notes
+  } = req.body;
+
+  const userId = req.user.user_id;
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE erp.inquiry
+      SET
+        company_id   = COALESCE($1, company_id),
+        customer_id  = COALESCE($2, customer_id),
+        expected_date = COALESCE($3, expected_date),
+        source       = COALESCE($4, source),
+        notes        = COALESCE($5, notes),
+        modified_by  = $6,
+        modified_at  = NOW()
+      WHERE id = $7
+      RETURNING *
+      `,
+      [
+        supplier_id || null,
+        customer_id || null,
+        expected_date || null,
+        source || null,
+        notes || null,
+        userId,
+        id
+      ]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ message: "Enquiry not found" });
+    }
+
+    res.json({
+      message: "Enquiry updated successfully",
+      enquiry: result.rows[0]
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * =====================================================
+ * UPDATE ENQUIRY ITEM
+ * =====================================================
+ */
+export const updateEnquiryItem = async (req, res) => {
+  const { itemId } = req.params;
+
+  const {
+    item_name,
+    width,
+    thickness,
+    length,
+    density,
+    pricing_source,
+    uom,
+    qty,
+    weight,
+    unit_price,
+    total_price
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE erp.inquiry_items
+      SET
+        item_name       = COALESCE($1, item_name),
+        width           = COALESCE($2, width),
+        thickness       = COALESCE($3, thickness),
+        length          = COALESCE($4, length),
+        density         = COALESCE($5, density),
+        pricing_source  = COALESCE($6, pricing_source),
+        uom             = COALESCE($7, uom),
+        qty             = COALESCE($8, qty),
+        weight          = COALESCE($9, weight),
+        unit_price      = COALESCE($10, unit_price),
+        total_price     = COALESCE($11, total_price)
+      WHERE id = $12
+      RETURNING *
+      `,
+      [
+        item_name || null,
+        width || null,
+        thickness || null,
+        length || null,
+        density || null,
+        pricing_source || null,
+        uom || null,
+        qty || null,
+        weight || null,
+        unit_price || null,
+        total_price || null,
+        itemId
+      ]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ message: "Enquiry item not found" });
+    }
+
+    res.json({
+      message: "Enquiry item updated successfully",
+      item: result.rows[0]
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+

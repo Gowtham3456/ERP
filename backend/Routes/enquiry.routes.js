@@ -4,7 +4,9 @@ import {
   getAllEnquiries,
   getEnquiryById,
   updateEnquiryStatus,
-  deleteEnquiry
+  deleteEnquiry,
+  updateEnquiry,
+  updateEnquiryItem
 } from "../Controllers/enquiry.controller.js";
 
 import {
@@ -36,6 +38,22 @@ router.delete(
   authenticateJWT,
   authorizeRoles("ADMIN"),
   deleteEnquiry
+);
+
+// Update enquiry header (editable fields only)
+router.put(
+  "/:id",
+  authenticateJWT,
+  authorizeRoles("ADMIN", "STAFF"),
+  updateEnquiry
+);
+
+// Update single enquiry item
+router.put(
+  "/item/:itemId",
+  authenticateJWT,
+  authorizeRoles("ADMIN", "STAFF"),
+  updateEnquiryItem
 );
 
 export default router;
