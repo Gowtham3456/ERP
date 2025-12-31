@@ -1,11 +1,9 @@
 import express from "express";
 import {
-  createQuotationFromEnquiry,
-  addQuotationItem,
+  createQuotation,
   getAllQuotations,
   getQuotationById,
-  updateQuotationStatus,
-  deleteQuotation
+  updateQuotationStatus
 } from "../Controllers/quotation.controller.js";
 
 import {
@@ -15,35 +13,26 @@ import {
 
 const router = express.Router();
 
+// Create quotation from enquiry
 router.post(
-  "/from-enquiry/:enquiryId",
+  "/",
   authenticateJWT,
   authorizeRoles("ADMIN", "STAFF"),
-  createQuotationFromEnquiry
+  createQuotation
 );
 
-router.post(
-  "/item",
-  authenticateJWT,
-  authorizeRoles("ADMIN", "STAFF"),
-  addQuotationItem
-);
-
+// Get all quotations
 router.get("/", authenticateJWT, getAllQuotations);
+
+// Get quotation by ID
 router.get("/:id", authenticateJWT, getQuotationById);
 
+// Update quotation status (approval)
 router.put(
   "/:id/status",
   authenticateJWT,
   authorizeRoles("ADMIN"),
   updateQuotationStatus
-);
-
-router.delete(
-  "/:id",
-  authenticateJWT,
-  authorizeRoles("ADMIN"),
-  deleteQuotation
 );
 
 export default router;
